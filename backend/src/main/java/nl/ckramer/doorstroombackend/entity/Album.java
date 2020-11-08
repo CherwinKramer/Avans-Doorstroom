@@ -31,14 +31,14 @@ public class Album extends BaseEntity {
     @JoinColumn(name = "artist_id")
     private Artist artist;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    @CreatedBy
+    private User user;
+
     @OneToMany
     @JoinColumn
     private List<Song> songs;
-
-    @Column(name = "place")
-    @Size(max = 50)
-    private String place;
-
 
     @Column(name = "deleted_yn", columnDefinition = "boolean default false")
     private Boolean deleted = false;

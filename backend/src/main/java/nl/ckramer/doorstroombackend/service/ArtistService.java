@@ -1,6 +1,7 @@
 package nl.ckramer.doorstroombackend.service;
 
 import nl.ckramer.doorstroombackend.entity.Artist;
+import nl.ckramer.doorstroombackend.entity.User;
 import nl.ckramer.doorstroombackend.model.response.ApiResponse;
 import nl.ckramer.doorstroombackend.repository.ArtistRepository;
 import org.apache.commons.lang3.StringUtils;
@@ -22,8 +23,16 @@ public class ArtistService {
         return new ApiResponse(true);
     }
 
-    public ApiResponse findById(Long id) {
+    public ApiResponse findById(Long id, User user) {
         Optional<Artist> artistOptional = artistRepository.findById(id);
+
+        if (artistOptional.isPresent()) {
+            Artist artist = artistOptional.get();
+            if (artist.getUser() == user) {
+                return new ApiResponse(true, artist);
+            }
+        }
+        return new ApiResponse(false, "You don't have access to view this content");
     }
 
 }

@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.springframework.data.annotation.CreatedBy;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -32,6 +33,11 @@ public class Song extends BaseEntity {
     @ManyToOne
     @JoinColumn(name = "album_id")
     private Album album;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    @CreatedBy
+    private User user;
 
     @Column(name = "deleted_yn", columnDefinition = "boolean default false")
     private Boolean deleted = false;

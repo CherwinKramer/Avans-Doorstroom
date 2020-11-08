@@ -1,8 +1,8 @@
 package nl.ckramer.doorstroombackend.security;
 
-import nl.ckramer.doorstroombackend.repository.UserRepository;
 import nl.ckramer.doorstroombackend.entity.User;
 import nl.ckramer.doorstroombackend.exception.UserNotFoundException;
+import nl.ckramer.doorstroombackend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -24,21 +24,19 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Transactional
     public UserDetails loadUserByEmail(String email) throws UsernameNotFoundException {
-        // Let people login with either username or email
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("User not found with email : " + email)
                 );
-
         return UserPrincipal.create(user);
     }
 
     @Transactional
     public UserDetails loadUserById(Long id) {
-        User user = userRepository.findById(id).orElseThrow(
-                () -> new UserNotFoundException("No user hs been found with id: " + id)
-        );
-
+        User user = userRepository.findById(id)
+                .orElseThrow(() ->
+                        new UserNotFoundException("No user hs been found with id: " + id)
+                );
         return UserPrincipal.create(user);
     }
 }

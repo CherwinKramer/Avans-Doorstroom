@@ -14,18 +14,18 @@ import java.util.List;
 import java.util.Objects;
 
 public class UserPrincipal implements UserDetails {
-    private Long id;
+    private final Long id;
 
-    private String name;
+    private final String name;
 
-    private String surname;
+    private final String surname;
 
-    private String email;
+    private final String email;
 
     @JsonIgnore
-    private String password;
+    private final String password;
 
-    private Collection<? extends GrantedAuthority> authorities;
+    private final Collection<? extends GrantedAuthority> authorities;
 
     public UserPrincipal(Long id, String name, String surname, String email, String password, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
@@ -38,8 +38,8 @@ public class UserPrincipal implements UserDetails {
 
     public static UserPrincipal create(User user) {
         List<GrantedAuthority> authorities = new ArrayList<>();
-        Role role = user.getRole();
         if (user != null && user.getRole() != null) {
+            Role role = user.getRole();
             for(Permission permission : role.getPermissions()){
                 authorities.add(new SimpleGrantedAuthority(permission.getName()));
             }

@@ -2,10 +2,12 @@ package nl.ckramer.doorstroombackend.controller;
 
 import nl.ckramer.doorstroombackend.entity.Album;
 import nl.ckramer.doorstroombackend.entity.Artist;
+import nl.ckramer.doorstroombackend.entity.Song;
 import nl.ckramer.doorstroombackend.entity.User;
 import nl.ckramer.doorstroombackend.model.response.ApiResponse;
 import nl.ckramer.doorstroombackend.repository.AlbumRepository;
 import nl.ckramer.doorstroombackend.repository.ArtistRepository;
+import nl.ckramer.doorstroombackend.repository.SongRepository;
 import nl.ckramer.doorstroombackend.security.CurrentUser;
 import nl.ckramer.doorstroombackend.security.UserPrincipal;
 import nl.ckramer.doorstroombackend.service.ArtistService;
@@ -30,27 +32,15 @@ public class ArtistController extends CrudController<Artist>{
     AlbumRepository albumRepository;
 
     @Autowired
+    SongRepository songRepository;
+
+    @Autowired
     ArtistService artistService;
 
     @Override
     @Transactional
     @GetMapping("/{id}")
     public ResponseEntity<?> view(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
-        User user = findUserByUserPrincipal(userPrincipal);
-        Optional<Artist> artistOptional = artistRepository.findById(id);
-
-        if (artistOptional.isPresent()) {
-            Artist artist = artistOptional.get();
-            if (artist.getUser() == user) {
-                return ResponseEntity.ok(new ApiResponse(true, artist));
-            }
-        }
-        return new ResponseEntity<>(new ApiResponse(false, "You don't have access to view this artist"), HttpStatus.FORBIDDEN);
-    }
-
-    @Transactional
-    @GetMapping("/{id}/albums")
-    public ResponseEntity<?> getAlbumsByArtist(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
         User user = findUserByUserPrincipal(userPrincipal);
         Optional<Artist> artistOptional = artistRepository.findById(id);
 
@@ -70,6 +60,36 @@ public class ArtistController extends CrudController<Artist>{
         User user = findUserByUserPrincipal(userPrincipal);
         List<Artist> artistList = artistRepository.findAllByDeletedFalseAndUser(user);
         return ResponseEntity.ok(new ApiResponse(true, artistList));
+    }
+
+    @Transactional
+    @GetMapping("/{id}/albums")
+    public ResponseEntity<?> getAlbumsByArtist(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
+        User user = findUserByUserPrincipal(userPrincipal);
+        ApiResponse apiResponse = artistService.findById(id, user);
+
+        if (!apiResponse.getSuccess()) {
+            return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
+        } else {
+            Artist artist = (Artist) apiResponse.getObject();
+            List<Album> albumList = albumRepository.findAllByArtistAndDeletedFalse(artist);
+            return ResponseEntity.ok(new ApiResponse(true, albumList));
+        }
+    }
+
+    @Transactional
+    @GetMapping("/{id}/songs")
+    public ResponseEntity<?> getSongsByArtist(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
+        User user = findUserByUserPrincipal(userPrincipal);
+        ApiResponse apiResponse = artistService.findById(id, user);
+
+        if (!apiResponse.getSuccess()) {
+            return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
+        } else {
+            Artist artist = (Artist) apiResponse.getObject();
+            List<Song> songList = songRepository.findAllByArtistAndDeletedFalse(artist);
+            return ResponseEntity.ok(new ApiResponse(true, songList));
+        }
     }
 
     @PostMapping
