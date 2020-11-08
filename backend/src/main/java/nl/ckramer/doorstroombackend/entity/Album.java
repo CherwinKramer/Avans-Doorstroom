@@ -1,10 +1,10 @@
 package nl.ckramer.doorstroombackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.springframework.data.annotation.CreatedBy;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -15,7 +15,7 @@ import java.util.List;
 @Table(name = "backend_album")
 @Data
 @NoArgsConstructor
-public class Album extends BaseEntity {
+public class Album extends Auditable {
 
     @Id
     @Column(name = "album_id")
@@ -31,17 +31,18 @@ public class Album extends BaseEntity {
     @JoinColumn(name = "artist_id")
     private Artist artist;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    @CreatedBy
-    private User user;
-
     @OneToMany
     @JoinColumn
     private List<Song> songs;
 
     @Column(name = "deleted_yn", columnDefinition = "boolean default false")
     private Boolean deleted = false;
+
+    @Override
+    @JsonIgnore
+    public User getUser() {
+        return super.getUser();
+    }
 
     @Override
     public boolean equals(Object obj) {

@@ -1,10 +1,10 @@
 package nl.ckramer.doorstroombackend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.springframework.data.annotation.CreatedBy;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -14,7 +14,7 @@ import javax.validation.constraints.Size;
 @Table(name = "backend_artist")
 @Data
 @NoArgsConstructor
-public class Artist extends BaseEntity {
+public class Artist extends Auditable {
 
     @Id
     @Column(name = "artist_id")
@@ -35,13 +35,14 @@ public class Artist extends BaseEntity {
     @Size(max = 50)
     private String place;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    @CreatedBy
-    private User user;
-
     @Column(name = "deleted_yn", columnDefinition = "boolean default false")
     private Boolean deleted = false;
+
+    @Override
+    @JsonIgnore
+    public User getUser() {
+        return super.getUser();
+    }
 
     @Override
     public boolean equals(Object obj) {

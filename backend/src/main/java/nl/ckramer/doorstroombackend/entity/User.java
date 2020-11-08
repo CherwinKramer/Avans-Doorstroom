@@ -9,7 +9,6 @@ import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-import java.time.Instant;
 import java.util.Objects;
 
 @Entity
@@ -62,8 +61,6 @@ public class User extends BaseEntity {
         this.surname = surname;
         this.email = email;
         this.password = password;
-        this.setCreatedAt(Instant.now());
-        this.setUpdatedAt(Instant.now());
     }
 
     @Override
