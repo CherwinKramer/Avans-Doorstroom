@@ -14,6 +14,11 @@ public class ApiResponse {
         this.success = success;
     }
 
+    public ApiResponse(Boolean success, Object object) {
+        this.success = success;
+        this.object = object;
+    }
+
     public ApiResponse(Boolean success, String message) {
         this.success = success;
         this.message = message;
