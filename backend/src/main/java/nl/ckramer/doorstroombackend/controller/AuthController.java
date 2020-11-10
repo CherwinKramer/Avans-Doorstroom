@@ -85,7 +85,7 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         String jwt = tokenProvider.generateToken(authentication);
-        return new ResponseEntity<>(new LoginResponse(new JwtAuthenticationResponse(jwt).getAccessToken(), userPrincipal.getEmail(), userPrincipal.getName(), userPrincipal.getSurname(), userPrincipal.getId()), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse(true, new LoginResponse(new JwtAuthenticationResponse(jwt).getAccessToken(), userPrincipal.getEmail(), userPrincipal.getName(), userPrincipal.getSurname(), userPrincipal.getId())), HttpStatus.OK);
     }
 
     @PostMapping("/register")
