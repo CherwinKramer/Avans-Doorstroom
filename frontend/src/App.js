@@ -6,6 +6,7 @@ import {AppMenu} from './AppMenu';
 import {AppProfile} from './AppProfile';
 import {Redirect, Route, Switch, withRouter} from 'react-router-dom';
 import {Dashboard} from './components/Dashboard';
+import {Artist} from './components/artist/Artist';
 
 import 'primereact/resources/themes/saga-orange/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -24,6 +25,7 @@ import {getCurrentUser} from "./utilities/JWTAuth";
 import PrivateRoute from "./utilities/PrivateRoute";
 import {ACCESS_TOKEN, MENU} from "./Constants";
 import {CSSTransition} from "react-transition-group";
+import {Crud} from "./pages/Crud";
 
 class App extends Component {
 
@@ -169,6 +171,11 @@ class App extends Component {
                         <PrivateRoute path="/dashboard" component={Dashboard} user={this.state.currentUser}
                                       authenticated={this.state.isAuthenticated}/>
 
+                        <PrivateRoute path="/artist" component={Artist} user={this.state.currentUser}
+                                      authenticated={this.state.isAuthenticated}/>
+
+                        <PrivateRoute path="/crud" component={Crud} user={this.state.currentUser}
+                                      authenticated={this.state.isAuthenticated}/>
                     </Switch>
                 </div>
 

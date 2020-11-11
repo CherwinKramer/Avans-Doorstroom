@@ -4,6 +4,7 @@ import nl.ckramer.doorstroombackend.entity.Album;
 import nl.ckramer.doorstroombackend.entity.Artist;
 import nl.ckramer.doorstroombackend.entity.Song;
 import nl.ckramer.doorstroombackend.entity.User;
+import nl.ckramer.doorstroombackend.model.request.ArtistRequest;
 import nl.ckramer.doorstroombackend.model.response.ApiResponse;
 import nl.ckramer.doorstroombackend.repository.AlbumRepository;
 import nl.ckramer.doorstroombackend.repository.ArtistRepository;
@@ -23,7 +24,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/artist")
-public class ArtistController extends CrudController<Artist>{
+public class ArtistController extends CrudController<ArtistRequest>{
 
     @Autowired
     ArtistRepository artistRepository;
@@ -94,7 +95,25 @@ public class ArtistController extends CrudController<Artist>{
 
     @PostMapping
     @Transactional
-    public ResponseEntity<?> create(@CurrentUser UserPrincipal userPrincipal, @Valid @RequestBody Artist artist) {
+    public ResponseEntity<?> create(@CurrentUser UserPrincipal userPrincipal, @RequestBody ArtistRequest request) {
+        Artist artist = new Artist();
+        artist.setArtistRequest(request);
+
+        ApiResponse apiResponse = artistService.validateArtist(artist);
+        if (!apiResponse.getSuccess()) {
+            return new ResponseEntity<>(new ApiResponse(false, "The data is not valid, please try again!"), HttpStatus.BAD_REQUEST);
+        }
+
+        artist = artistRepository.save(artist);
+        return ResponseEntity.ok(new ApiResponse(true, "Artist has been succesfully created!", artist));
+    }
+
+    @PutMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> update(@CurrentUser UserPrincipal userPrincipal, @Valid @RequestBody ArtistRequest artistRequest, @PathVariable Long id) {
+        Optional<Artist> oldOptional = artistRepository.findById(id);
+        Artist artist = oldOptional.orElse(null);
+        if (artist != null) artist.setArtistRequest(artistRequest);
 
         ApiResponse apiResponse = artistService.validateArtist(artist);
         if (!apiResponse.getSuccess()) {

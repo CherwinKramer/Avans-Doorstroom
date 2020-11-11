@@ -4,9 +4,8 @@ export const AppFooter = () => {
 
     return (
         <div className="layout-footer">
-            <span className="footer-text" style={{ 'marginRight': '5px' }}>Avans Doorstroom Opdracht</span>
-            <img src="assets/layout/images/logo.svg" alt="Logo" width="80" />
-            <span className="footer-text" style={{ 'marginLeft': '5px' }}>Theme and Layout</span>
+            <span className="footer-text" style={{ 'marginRight': '25px' }}>Avans Doorstroom Opdracht</span>
+            <span className="footer-text" style={{ 'marginLeft': '25px' }}>Made by Cherwin Giovanni Kramer</span>
         </div>
     );
 }

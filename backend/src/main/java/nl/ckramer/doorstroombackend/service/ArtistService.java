@@ -17,7 +17,7 @@ public class ArtistService {
     private ArtistRepository artistRepository;
 
     public ApiResponse validateArtist(Artist artist) {
-        if (StringUtils.isAnyEmpty(artist.getName(), artist.getSurname(), artist.getPlace())) {
+        if (artist == null || StringUtils.isAnyEmpty(artist.getName(), artist.getSurname(), artist.getPlace())) {
             return new ApiResponse(false, "The artist was not valid, please try again.");
         }
         return new ApiResponse(true);
