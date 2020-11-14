@@ -26,6 +26,7 @@ import PrivateRoute from "./utilities/PrivateRoute";
 import {ACCESS_TOKEN, MENU} from "./Constants";
 import {CSSTransition} from "react-transition-group";
 import {Crud} from "./pages/Crud";
+import {Album} from "./components/Album/Album";
 
 class App extends Component {
 
@@ -172,6 +173,9 @@ class App extends Component {
                                       authenticated={this.state.isAuthenticated}/>
 
                         <PrivateRoute path="/artist" component={Artist} user={this.state.currentUser}
+                                      authenticated={this.state.isAuthenticated}/>
+
+                        <PrivateRoute path="/album" component={Album} user={this.state.currentUser}
                                       authenticated={this.state.isAuthenticated}/>
 
                         <PrivateRoute path="/crud" component={Crud} user={this.state.currentUser}

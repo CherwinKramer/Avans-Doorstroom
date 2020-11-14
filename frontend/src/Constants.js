@@ -4,6 +4,7 @@ export const SERVER_URL = "http://localhost:8080/api";
 export const MENU = [
     { label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' },
     { label: 'Artist', icon: 'pi pi-fw pi-user', to: '/artist' },
+    { label: 'Album', icon: 'pi pi-fw pi-briefcase', to: '/album' },
     {
         label: 'UI Kit', icon: 'pi pi-fw pi-sitemap',
         items: [

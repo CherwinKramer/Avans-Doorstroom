@@ -156,6 +156,13 @@ export class Artist extends Component {
             );
         }
 
+        // const albumDialogFooter = (
+        //     <>
+        //         <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={() => {this.setState({albumDialogVisible: false})}}/>
+        //         {/*<Button label="Save" icon="pi pi-check" className="p-button-text" onClick={this.saveArtist}/>*/}
+        //     </>
+        // );
+
         const artistDialogFooter = (
             <>
                 <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={() => {this.setState({dialogVisible: false})}}/>
@@ -188,6 +195,10 @@ export class Artist extends Component {
                             <Column body={actionBodyTemplate} />
 
                         </DataTable>
+
+                        {/*<Dialog visible={this.state.dialogVisible} style={{width: '450px'}} header="Artist" modal className="p-fluid" footer={artistDialogFooter} onHide={() => {this.resetValues()}}>*/}
+
+                        {/*</Dialog>*/}
 
                         <Dialog visible={this.state.dialogVisible} style={{width: '450px'}} header="Artist" modal className="p-fluid" footer={artistDialogFooter} onHide={() => {this.resetValues()}}>
 
