@@ -39,7 +39,7 @@ class App extends Component {
             isLoading: true, // default true, to prevent rending without user is loaded for private route.
 
             staticMenuInactive: false,
-        };
+        }
 
         this.handleLogout = this.handleLogout.bind(this);
         this.loadCurrentUser = this.loadCurrentUser.bind(this);
@@ -48,23 +48,6 @@ class App extends Component {
         this.onToggleMenu = this.onToggleMenu.bind(this);
         this.onMenuItemClick = this.onMenuItemClick.bind(this);
         this.menu = MENU;
-
-        // notifier.configure({
-        //     autoClose: 3000,
-        //     width: 275,
-        //     position: "top-right",
-        //     delay: 0,
-        //     closeOnClick: true,
-        //     pauseOnHover: true,
-        //     onlyLast: false,
-        //     rtl: false,
-        //     newestOnTop: true,
-        //     animation: {
-        //         in: "fadeIn",
-        //         out: "fadeOut",
-        //         duration: 400
-        //     }
-        // });
     }
 
 

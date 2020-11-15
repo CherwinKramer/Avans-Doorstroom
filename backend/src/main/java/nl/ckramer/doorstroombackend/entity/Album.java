@@ -3,6 +3,7 @@ package nl.ckramer.doorstroombackend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nl.ckramer.doorstroombackend.model.request.AlbumRequest;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -37,6 +38,12 @@ public class Album extends Auditable {
 
     @Column(name = "deleted_yn", columnDefinition = "boolean default false")
     private Boolean deleted = false;
+
+    public void setAlbumRequest(AlbumRequest albumRequest) {
+        if (albumRequest != null) {
+            this.name = albumRequest.getName();
+        }
+    }
 
     @Override
     @JsonIgnore

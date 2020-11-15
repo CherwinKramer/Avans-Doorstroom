@@ -8,6 +8,7 @@ import {Dialog} from "primereact/dialog";
 import {InputText} from "primereact/inputtext";
 import {getArtists} from "../../service/ArtistService";
 import {Dropdown} from "primereact/dropdown";
+import {Toast} from "primereact/toast";
 
 export class Album extends Component {
 
@@ -19,9 +20,7 @@ export class Album extends Component {
                 id: '',
                 name: '',
                 artist: {
-                    id: '',
-                    name: '',
-                    surname: ''
+                    id: ''
                 },
             },
 
@@ -44,9 +43,8 @@ export class Album extends Component {
                 albums: albumData.object
             })
             getArtists().then(artistData => {
-                this.setState({
-                    artists: artistData.object
-                })
+                let artistSelectListData = artistData.object.map(artist => { return {label: artist.name + ' ' + artist.surname, value: artist.id} });
+                this.setState({artists: artistSelectListData});
             })
         });
     }
@@ -71,10 +69,23 @@ export class Album extends Component {
         this.state.album['name'] = event.target.value;
     }
 
+    // handleArtistChange(event) {
+    //     console.log(event.value);
+    //     this.updateProperty('artistId', event.value);
+    // }
+    //
+    // updateProperty(property, value) {
+    //     let album = this.state.album;
+    //     album[property] = value;
+    //     this.setState({album: album});
+    // }
+
     handleArtistChange(event) {
-        console.log(event.value);
-        this.state.album.artist = event.value;
-        console.log(this.state.album);
+        let album = this.state.album;
+        console.log(event);
+        album['artist'].id = event.value;
+        this.setState({album: album});
+        console.log(album);
     }
 
     saveAlbum() {
@@ -83,25 +94,34 @@ export class Album extends Component {
         let creation = !album.id;
         console.log('creation ' + creation);
 
-        if (!album.name || !album.surname || !album.place) {
-            return;
+        let failed = false;
+        if (!album.name) {
+            this.toast.show({severity: 'error', summary: 'Validation error', detail: 'Name must be filled in', life: 3000});
+            failed = true;
         }
+        if (!album.artist.id) {
+            this.toast.show({severity: 'error', summary: 'Validation error', detail: 'Artist must be selected', life: 3000});
+            failed = true;
+        }
+        if (failed) return;
 
         if (creation) {
             createAlbum(album).then(r => {
                 albums.push(r.object);
                 this.setState({albums: albums});
                 this.resetValues();
+                this.toast.show({severity:'success', detail: r.message, life: 3000});
             }).catch(e => {
-                // notifier.error(e.error || "Error.")
+                this.toast.show({severity:'error', summary: e.error, detail:'An error occurred', life: 3000});
             });
         } else {
             updateAlbum(album).then(r => {
                 albums[this.findSelectedAlbumIndex()] = album;
                 this.setState({albums:albums});
                 this.resetValues();
+                this.toast.show({severity:'success', detail: r.message, life: 3000});
             }).catch(e => {
-                // notifier.error(e.error || "Error.")
+                this.toast.show({severity:'error', summary: e.error, detail:'An error occurred', life: 3000});
             });
         }
     }
@@ -115,9 +135,9 @@ export class Album extends Component {
             albums.splice(indexId, 1);
             this.setState({albums: albums});
             this.resetValues();
-            // notifier.success("Country has been successfully deleted");
+            this.toast.show({severity:'success', detail: 'Album has been successfully deleted', life: 3000});
         }).catch(e => {
-            // notifier.error(e.error || "Error: Could not delete this country.");
+            this.toast.show({severity:'error', detail: 'Could not delete the album', life: 3000});
         });
     }
 
@@ -126,18 +146,6 @@ export class Album extends Component {
     }
 
     render() {
-
-        const artistMap = () => {
-            let artistList = this.state.artists;
-            console.log('artist map');
-            console.log(artistList);
-            // let test = artistList.map(artist => { return {label: artist.name, value: artist.id} });
-            // console.log(test);
-
-            let countryData = Object.keys(artistList).map(artist => { return {label: artist.name, value: artist.id} });
-            return (countryData);
-        }
-
         const leftToolbarTemplate = () => {
             return (
                 <React.Fragment>
@@ -185,26 +193,10 @@ export class Album extends Component {
             </>
         );
 
-        const valueTemplate = (option, props) => {
-            if (option) {
-                return (
-                    <>{option.name} {option.surname}</>
-                );
-            }
-
-            return (
-                <>{props.placeholder}</>
-            );
-        }
-
-        const itemTemplate = (option) => {
-            return (
-                <>{option.name} {option.surname}</>
-            );
-        }
-
         return (
             <div className="p-grid crud-demo">
+                <Toast ref={(el) => this.toast = el} />
+
                 <div className="p-col-12">
                     <div className="card">
                         <Toolbar className="p-mb-4" left={leftToolbarTemplate} />
@@ -223,7 +215,6 @@ export class Album extends Component {
                         </DataTable>
 
                         <Dialog visible={this.state.dialogVisible} style={{width: '450px'}} header="Album" modal className="p-fluid" footer={albumDialogFooter} onHide={() => {this.resetValues()}}>
-
                             <div className="p-field">
                                 <label htmlFor="name">Name</label>
                                 <InputText id="name" defaultValue={this.state.album.name} onChange={(e) => this.state.album['name'] = e.target.value} required autoFocus />
@@ -231,10 +222,10 @@ export class Album extends Component {
 
                             <div className="p-field">
                                 <label htmlFor="surname">Artist</label>
-                                <Dropdown itemTemplate={itemTemplate} valueTemplate={valueTemplate} value={this.state.album.artist} options={this.state.artists}
-                                          appendTo={document.body} onChange={this.handleArtistChange} placeholder="Select an artist" />
+                                <Dropdown value={this.state.album.artist.id} options={this.state.artists}
+                                          appendTo={document.body} onChange={this.handleArtistChange}
+                                          placeholder="Select an artist" />
                             </div>
-
                         </Dialog>
 
                         <Dialog visible={this.state.deleteDialogVisible} style={{width: '450px'}} header="Confirm" modal footer={deleteAlbumDialogFooter} onHide={() => {this.resetValues()}}>

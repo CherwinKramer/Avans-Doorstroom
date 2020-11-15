@@ -6,6 +6,7 @@ import {Toolbar} from 'primereact/toolbar';
 import {createArtist, deleteArtist, getArtists, updateArtist} from "../../service/ArtistService";
 import {Dialog} from "primereact/dialog";
 import {InputText} from "primereact/inputtext";
+import {Toast} from "primereact/toast";
 
 export class Artist extends Component {
 
@@ -30,6 +31,7 @@ export class Artist extends Component {
         this.handleNameChange = this.handleNameChange.bind(this);
         this.handleSurnameChange = this.handleSurnameChange.bind(this);
         this.handlePlaceChange = this.handlePlaceChange.bind(this);
+
     }
 
     componentDidMount() {
@@ -71,25 +73,39 @@ export class Artist extends Component {
         let creation = !artist.id;
         console.log('creation ' + creation);
 
-        if (!artist.name || !artist.surname || !artist.place) {
-            return;
+        let failed = false;
+        if (!artist.name) {
+            this.toast.show({severity: 'error', summary: 'Validation error', detail: 'Name must be filled in', life: 3000});
+            failed = true;
         }
+        if (!artist.surname) {
+            this.toast.show({severity: 'error', summary: 'Validation error', detail: 'Surname must be filled in', life: 3000});
+            failed = true;
+        }
+        if (!artist.place) {
+            this.toast.show({severity: 'error', summary: 'Validation error', detail: 'Place must be filled in', life: 3000});
+            failed = true;
+        }
+        if (failed) return;
 
         if (creation) {
             createArtist(artist).then(r => {
                 artists.push(r.object);
                 this.setState({artists: artists});
                 this.resetValues();
+                this.toast.show({severity:'success', detail: r.message, life: 3000});
             }).catch(e => {
-                // notifier.error(e.error || "Error.")
+                this.toast.show({severity:'error', summary: e.error, detail:'An error occurred', life: 3000});
             });
         } else {
             updateArtist(artist).then(r => {
                 artists[this.findSelectedArtistIndex()] = artist;
                 this.setState({artists:artists});
                 this.resetValues();
+                this.toast.show({severity:'success', detail: r.message, life: 3000});
             }).catch(e => {
-                // notifier.error(e.error || "Error.")
+                console.log(e);
+                this.toast.show({severity:'error', summary: e.error, detail:'An error occurred', life: 3000});
             });
         }
     }
@@ -179,6 +195,8 @@ export class Artist extends Component {
 
         return (
             <div className="p-grid crud-demo">
+                <Toast ref={(el) => this.toast = el} />
+
                 <div className="p-col-12">
                     <div className="card">
                         <Toolbar className="p-mb-4" left={leftToolbarTemplate} />
@@ -209,7 +227,8 @@ export class Artist extends Component {
 
                             <div className="p-field">
                                 <label htmlFor="surname">Surname</label>
-                                <InputText id="surname" defaultValue={this.state.artist.surname} onChange={(e) => this.state.artist['surname'] = e.target.value} required autoFocus />
+                                <InputText id="surname" defaultValue={this.state.artist.surname}
+                                           onChange={(e) => this.state.artist['surname'] = e.target.value} required autoFocus />
                             </div>
 
                             <div className="p-field">
