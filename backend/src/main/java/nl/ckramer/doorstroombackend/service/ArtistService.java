@@ -28,7 +28,7 @@ public class ArtistService {
 
         if (artistOptional.isPresent()) {
             Artist artist = artistOptional.get();
-            if (artist.getUser() == user) {
+            if (artist.getUser().equals(user)) {
                 return new ApiResponse(true, artist);
             }
         }

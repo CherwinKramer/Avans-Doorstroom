@@ -9,12 +9,13 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "backend_song")
 @Data
 @NoArgsConstructor
-public class Song extends Auditable {
+public class Song extends Auditable implements Serializable {
 
     @Id
     @Column(name = "song_id")
@@ -26,11 +27,11 @@ public class Song extends Auditable {
     @Size(max = 30)
     private String name;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "artist_id")
     private Artist artist;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "album_id")
     private Album album;
 

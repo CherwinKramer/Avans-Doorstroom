@@ -63,7 +63,6 @@ public class ArtistController extends CrudController<ArtistRequest>{
         return ResponseEntity.ok(new ApiResponse(true, artistList));
     }
 
-    @Transactional
     @GetMapping("/{id}/albums")
     public ResponseEntity<?> getAlbumsByArtist(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
         User user = findUserByUserPrincipal(userPrincipal);
@@ -74,6 +73,9 @@ public class ArtistController extends CrudController<ArtistRequest>{
         } else {
             Artist artist = (Artist) apiResponse.getObject();
             List<Album> albumList = albumRepository.findAllByArtistAndDeletedFalse(artist);
+            for (Album album : albumList) {
+                album.setSongs(songRepository.findAllByAlbumAndDeletedFalse(album));
+            }
             return ResponseEntity.ok(new ApiResponse(true, albumList));
         }
     }

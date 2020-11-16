@@ -10,13 +10,24 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
 @Table(name = "backend_album")
 @Data
 @NoArgsConstructor
-public class Album extends Auditable {
+@NamedEntityGraph(
+        name = "album-get-all",
+        attributeNodes = {
+                @NamedAttributeNode("artist"),
+        })
+@NamedEntityGraph(
+        name = "album-get-artist",
+        attributeNodes = {
+                @NamedAttributeNode("artist"),
+        })
+public class Album extends Auditable implements Serializable {
 
     @Id
     @Column(name = "album_id")
@@ -28,11 +39,11 @@ public class Album extends Auditable {
     @Size(max = 30)
     private String name;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "artist_id")
     private Artist artist;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn
     private List<Song> songs;
 

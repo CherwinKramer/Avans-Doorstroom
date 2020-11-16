@@ -10,12 +10,13 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "backend_artist")
 @Data
 @NoArgsConstructor
-public class Artist extends Auditable {
+public class Artist extends Auditable implements Serializable {
 
     @Id
     @Column(name = "artist_id")

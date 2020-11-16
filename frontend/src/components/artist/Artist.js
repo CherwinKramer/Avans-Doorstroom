@@ -3,7 +3,7 @@ import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {Button} from 'primereact/button';
 import {Toolbar} from 'primereact/toolbar';
-import {createArtist, deleteArtist, getArtists, updateArtist} from "../../service/ArtistService";
+import {createArtist, deleteArtist, getAlbumsForArtist, getArtists, updateArtist} from "../../service/ArtistService";
 import {Dialog} from "primereact/dialog";
 import {InputText} from "primereact/inputtext";
 import {Toast} from "primereact/toast";
@@ -22,9 +22,11 @@ export class Artist extends Component {
             },
             artists: {},
             dialogVisible: false,
-            deleteDialogVisible: false
+            deleteDialogVisible: false,
+            albumDialogVisible: false
         };
 
+        this.findAlbumsByArtist = this.findAlbumsByArtist.bind(this);
         this.resetValues = this.resetValues.bind(this);
         this.saveArtist = this.saveArtist.bind(this);
         this.deleteArtist = this.deleteArtist.bind(this);
@@ -51,7 +53,9 @@ export class Artist extends Component {
                 place: ''
             },
             dialogVisible: false,
-            deleteDialogVisible: false
+            deleteDialogVisible: false,
+            albumDialogVisible: false,
+            expandedRows: ''
         });
     }
 
@@ -65,6 +69,16 @@ export class Artist extends Component {
 
     handlePlaceChange(event) {
         this.state.artist['place'] = event.target.value;
+    }
+
+    findAlbumsByArtist(artist) {
+        console.log(artist);
+        getAlbumsForArtist(artist.id).then(data => {
+            this.setState({
+                albums: data.object,
+                albumDialogVisible: true
+            })
+        });
     }
 
     saveArtist() {
@@ -119,9 +133,9 @@ export class Artist extends Component {
             artists.splice(indexId, 1);
             this.setState({artists: artists});
             this.resetValues();
-            // notifier.success("Country has been successfully deleted");
+            this.toast.show({severity:'success', detail: r.message, life: 3000});
         }).catch(e => {
-            // notifier.error(e.error || "Error: Could not delete this country.");
+            this.toast.show({severity:'error', summary: e.error, detail:'An error occurred', life: 3000});
         });
     }
 
@@ -167,17 +181,11 @@ export class Artist extends Component {
             return (
                 <div className="actions">
                     <Button icon="pi pi-pencil" className="p-button-rounded p-button-success p-mr-2" onClick={() => {this.setState({dialogVisible: true, artist: rowData})}}/>
-                    <Button icon="pi pi-trash" className="p-button-rounded p-button-warning" onClick={() => {this.setState({deleteDialogVisible: true, artist: rowData})}}/>
+                    <Button icon="pi pi-trash" className="p-button-rounded p-button-danger p-mr-2" onClick={() => {this.setState({deleteDialogVisible: true, artist: rowData})}}/>
+                    <Button icon="pi pi-briefcase" className="p-button-rounded p-button-info p-mr-2" onClick={() => {this.findAlbumsByArtist(rowData)}}/>
                 </div>
             );
         }
-
-        // const albumDialogFooter = (
-        //     <>
-        //         <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={() => {this.setState({albumDialogVisible: false})}}/>
-        //         {/*<Button label="Save" icon="pi pi-check" className="p-button-text" onClick={this.saveArtist}/>*/}
-        //     </>
-        // );
 
         const artistDialogFooter = (
             <>
@@ -193,6 +201,18 @@ export class Artist extends Component {
             </>
         );
 
+        const albumSongExpansionTemplate = (data) => {
+            return (
+                <div className="album-song-expansion">
+                    <DataTable value={data.songs} header="Songs" paginator rows={10} className="p-datatable-lg" emptyMessage="No songs found for this album">
+
+                        <Column field="name"></Column>
+
+                    </DataTable>
+                </div>
+            );
+        }
+
         return (
             <div className="p-grid crud-demo">
                 <Toast ref={(el) => this.toast = el} />
@@ -204,7 +224,7 @@ export class Artist extends Component {
                         <DataTable value={this.state.artists}
                                    dataKey="id" paginator rows={10} rowsPerPageOptions={[5, 10, 25]} className="datatable-responsive"
                                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                                   currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+                                   currentPageReportTemplate="Showing {first} to {last} of {totalRecords} artists"
                                    emptyMessage="No artists found." header="Manage Artists">
 
                             <Column field="name" header="Name" sortable body={nameBodyTemplate} />
@@ -213,10 +233,6 @@ export class Artist extends Component {
                             <Column body={actionBodyTemplate} />
 
                         </DataTable>
-
-                        {/*<Dialog visible={this.state.dialogVisible} style={{width: '450px'}} header="Artist" modal className="p-fluid" footer={artistDialogFooter} onHide={() => {this.resetValues()}}>*/}
-
-                        {/*</Dialog>*/}
 
                         <Dialog visible={this.state.dialogVisible} style={{width: '450px'}} header="Artist" modal className="p-fluid" footer={artistDialogFooter} onHide={() => {this.resetValues()}}>
 
@@ -241,8 +257,20 @@ export class Artist extends Component {
                         <Dialog visible={this.state.deleteDialogVisible} style={{width: '450px'}} header="Confirm" modal footer={deleteArtistDialogFooter} onHide={() => {this.resetValues()}}>
                             <div className="confirmation-content">
                                 <i className="pi pi-exclamation-triangle p-mr-3" style={{fontSize: '2rem'}}/>
-                                {this.state.artist && <span>Are you sure you want to delete <b>{this.state.artist.name}</b>?</span>}
+                                {this.state.artist && <span>Are you sure you want to delete <b>{this.state.artist.name} {this.state.artist.surname}</b>?</span>}
                             </div>
+                        </Dialog>
+
+                        <Dialog visible={this.state.albumDialogVisible} style={{width: '1000px'}} header="Albums" modal onHide={() => {this.setState({albums: {}, albumDialogVisible: false, expandedRows: ''})}}>
+                            <DataTable value={this.state.albums} paginator rows={10}
+                                       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                                       emptyMessage="No albums found." className="datatable-responsive" expandedRows={this.state.expandedRows}
+                                       rowExpansionTemplate={albumSongExpansionTemplate} onRowToggle={(e) => this.setState({ expandedRows: e.data })}>
+
+                                <Column expander style={{ width: '3em' }} />
+                                <Column field="name" header="Name" sortable />
+
+                            </DataTable>
                         </Dialog>
 
                     </div>

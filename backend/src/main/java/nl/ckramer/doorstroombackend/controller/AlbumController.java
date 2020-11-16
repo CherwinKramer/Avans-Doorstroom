@@ -39,7 +39,6 @@ public class AlbumController extends CrudController<AlbumRequest>{
     AlbumService albumService;
 
     @Override
-    @Transactional
     @GetMapping("/{id}")
     public ResponseEntity<?> view(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
         User user = findUserByUserPrincipal(userPrincipal);
@@ -54,7 +53,6 @@ public class AlbumController extends CrudController<AlbumRequest>{
         return new ResponseEntity<>(new ApiResponse(false, "You don't have access to view this album"), HttpStatus.FORBIDDEN);
     }
 
-    @Transactional
     @GetMapping("/{id}/songs")
     public ResponseEntity<?> getSongsByAlbum(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
         User user = findUserByUserPrincipal(userPrincipal);
@@ -70,7 +68,6 @@ public class AlbumController extends CrudController<AlbumRequest>{
     }
 
     @Override
-    @Transactional
     @GetMapping
     public ResponseEntity<?> viewAll(@CurrentUser UserPrincipal userPrincipal) {
         User user = findUserByUserPrincipal(userPrincipal);
