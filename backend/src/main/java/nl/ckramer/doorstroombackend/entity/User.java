@@ -3,6 +3,7 @@ package nl.ckramer.doorstroombackend.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import nl.ckramer.doorstroombackend.entity.base.BaseEntity;
 import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.*;
@@ -12,7 +13,7 @@ import javax.validation.constraints.Size;
 import java.util.Objects;
 
 @Entity
-@Table(name = "auth_user", uniqueConstraints = {
+@Table(name = "backend_user", uniqueConstraints = {
         @UniqueConstraint(columnNames = {
                 "email"
         })
@@ -48,10 +49,6 @@ public class User extends BaseEntity {
     @Size(max = 100)
     @JsonIgnore
     private String password;
-
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private Role role;
 
     @Column(name = "deleted_yn", columnDefinition = "boolean default false")
     private Boolean deleted = false;

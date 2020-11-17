@@ -14,9 +14,6 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private RoleService roleService;
-
     public ApiResponse validateUser(UserRequest userRequest) {
         if (StringUtils.isAnyEmpty(userRequest.getName(), userRequest.getSurname(), userRequest.getEmail(), userRequest.getPassword())) {
             return new ApiResponse(false, "The registration request was not valid, please try again.");

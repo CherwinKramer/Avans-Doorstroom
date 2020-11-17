@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { CSSTransition } from 'react-transition-group';
+import React, {useState} from 'react';
+import {NavLink} from 'react-router-dom';
+import {CSSTransition} from 'react-transition-group';
 import classNames from 'classnames';
 
 const AppSubmenu = (props) => {

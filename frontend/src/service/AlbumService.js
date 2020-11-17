@@ -25,6 +25,13 @@ export function deleteAlbum(albumRequest) {
 }
 
 
+export function getSongsForAlbum(id) {
+    return request({
+        url: SERVER_URL + "/album/" + id + "/songs",
+        method: 'GET'
+    });
+}
+
 export function createAlbum(albumRequest) {
     return request({
         url: SERVER_URL + "/album",

@@ -1,10 +1,12 @@
 package nl.ckramer.doorstroombackend.controller;
 
+import nl.ckramer.doorstroombackend.controller.interf.CrudController;
 import nl.ckramer.doorstroombackend.entity.Album;
 import nl.ckramer.doorstroombackend.entity.Artist;
 import nl.ckramer.doorstroombackend.entity.Song;
 import nl.ckramer.doorstroombackend.entity.User;
-import nl.ckramer.doorstroombackend.model.request.AlbumRequest;
+import nl.ckramer.doorstroombackend.model.dto.AlbumDto;
+import nl.ckramer.doorstroombackend.model.dto.SongDto;
 import nl.ckramer.doorstroombackend.model.response.ApiResponse;
 import nl.ckramer.doorstroombackend.repository.AlbumRepository;
 import nl.ckramer.doorstroombackend.repository.ArtistRepository;
@@ -19,12 +21,13 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/album")
-public class AlbumController extends CrudController<AlbumRequest>{
+public class AlbumController extends CrudController<AlbumDto> {
 
     @Autowired
     AlbumRepository albumRepository;
@@ -42,48 +45,33 @@ public class AlbumController extends CrudController<AlbumRequest>{
     @GetMapping("/{id}")
     public ResponseEntity<?> view(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
         User user = findUserByUserPrincipal(userPrincipal);
-        Optional<Album> albumOptional = albumRepository.findById(id);
+        Optional<Album> albumOptional = albumRepository.findByIdAndUser(id, user);
 
         if (albumOptional.isPresent()) {
-            Album album = albumOptional.get();
-            if (album.getUser() == user) {
-                return ResponseEntity.ok(new ApiResponse(true, album));
-            }
+            return ResponseEntity.ok(new ApiResponse(true, new AlbumDto(albumOptional.get())));
         }
         return new ResponseEntity<>(new ApiResponse(false, "You don't have access to view this album"), HttpStatus.FORBIDDEN);
-    }
-
-    @GetMapping("/{id}/songs")
-    public ResponseEntity<?> getSongsByAlbum(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
-        User user = findUserByUserPrincipal(userPrincipal);
-        ApiResponse apiResponse = albumService.findById(id, user);
-
-        if (!apiResponse.getSuccess()) {
-            return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
-        } else {
-            Album album = (Album) apiResponse.getObject();
-            List<Song> songList = songRepository.findAllByAlbumAndDeletedFalse(album);
-            return ResponseEntity.ok(new ApiResponse(true, songList));
-        }
     }
 
     @Override
     @GetMapping
     public ResponseEntity<?> viewAll(@CurrentUser UserPrincipal userPrincipal) {
-        User user = findUserByUserPrincipal(userPrincipal);
-        List<Album> albumList = albumRepository.findAllByUserAndDeletedFalse(user);
-        return ResponseEntity.ok(new ApiResponse(true, albumList));
+        List<AlbumDto> albumDtoList = new ArrayList<>();
+        for (Album album : albumRepository.findAllByUserAndDeletedFalse(findUserByUserPrincipal(userPrincipal))) {
+            albumDtoList.add(new AlbumDto(album));
+        }
+        return ResponseEntity.ok(new ApiResponse(true, albumDtoList));
     }
 
     @PostMapping
     @Transactional
-    public ResponseEntity<?> create(@CurrentUser UserPrincipal userPrincipal, @Valid @RequestBody AlbumRequest albumRequest) {
+    public ResponseEntity<?> create(@CurrentUser UserPrincipal userPrincipal, @Valid @RequestBody AlbumDto albumDto) {
         Album album = new Album();
-        if (albumRequest.getArtistRequest() != null && albumRequest.getArtistRequest().getId() != null) {
-            Optional<Artist> artistOptional = artistRepository.findById(albumRequest.getArtistRequest().getId());
+        if (albumDto.getArtistDto() != null && albumDto.getArtistDto().getId() != null) {
+            Optional<Artist> artistOptional = artistRepository.findById(albumDto.getArtistDto().getId());
             album.setArtist(artistOptional.isEmpty() ? null : artistOptional.get());
         }
-        album.setAlbumRequest(albumRequest);
+        album.setName(albumDto.getName());
 
         ApiResponse apiResponse = albumService.validateAlbum(album);
         if (!apiResponse.getSuccess()) {
@@ -91,31 +79,29 @@ public class AlbumController extends CrudController<AlbumRequest>{
         }
 
         album = albumRepository.save(album);
-        return ResponseEntity.ok(new ApiResponse(true, "Album has been succesfully created!", album));
+        return ResponseEntity.ok(new ApiResponse(true, "Album has been succesfully created!", new AlbumDto(album)));
     }
 
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<?> update(@CurrentUser UserPrincipal userPrincipal, @Valid @RequestBody AlbumRequest albumRequest, @PathVariable Long id) {
+    public ResponseEntity<?> update(@CurrentUser UserPrincipal userPrincipal, @Valid @RequestBody AlbumDto albumDto, @PathVariable Long id) {
         Optional<Album> albumOptional = albumRepository.findById(id);
         if (!albumOptional.isPresent()) {
             return new ResponseEntity<>(new ApiResponse(false, "The data is not valid, please try again!"), HttpStatus.BAD_REQUEST);
         }
 
         Album album = albumOptional.get();
-        if (albumRequest.getArtistRequest() != null && albumRequest.getArtistRequest().getId() != null) {
-            Optional<Artist> artistOptional = artistRepository.findById(albumRequest.getArtistRequest().getId());
+        if (albumDto.getArtistDto() != null && albumDto.getArtistDto().getId() != null) {
+            Optional<Artist> artistOptional = artistRepository.findById(albumDto.getArtistDto().getId());
             album.setArtist(artistOptional.isEmpty() ? null : artistOptional.get());
         }
-        album.setAlbumRequest(albumRequest);
+        album.setName(albumDto.getName());
 
         ApiResponse apiResponse = albumService.validateAlbum(album);
         if (!apiResponse.getSuccess()) {
             return new ResponseEntity<>(new ApiResponse(false, "The data is not valid, please try again!"), HttpStatus.BAD_REQUEST);
         }
-
-        album = albumRepository.save(album);
-        return ResponseEntity.ok(new ApiResponse(true, "Album has been succesfully updated!", album));
+        return ResponseEntity.ok(new ApiResponse(true, "Album has been succesfully updated!", new AlbumDto(albumRepository.save(album))));
     }
 
     @DeleteMapping("/{id}")
@@ -130,9 +116,26 @@ public class AlbumController extends CrudController<AlbumRequest>{
                 }
                 album.setDeleted(true);
                 albumRepository.save(album);
-                return new ResponseEntity<>(new ApiResponse(true, "Album has been deleted succesfully!", album), HttpStatus.OK);
+                return new ResponseEntity<>(new ApiResponse(true, "Album has been deleted succesfully!", new AlbumDto(album)), HttpStatus.OK);
             }
         }
         return new ResponseEntity<>(new ApiResponse(false, "Could not delete the album!"), HttpStatus.BAD_REQUEST);
+    }
+
+    @GetMapping("/{id}/songs")
+    public ResponseEntity<?> getSongsByAlbum(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
+        User user = findUserByUserPrincipal(userPrincipal);
+        ApiResponse apiResponse = albumService.findById(id, user);
+
+        if (!apiResponse.getSuccess()) {
+            return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
+        } else {
+            Album album = (Album) apiResponse.getObject();
+            List<SongDto> songDtoList= new ArrayList<>();
+            for (Song song : songRepository.findAllByAlbumAndDeletedFalse(album)) {
+                songDtoList.add(new SongDto(song));
+            }
+            return ResponseEntity.ok(new ApiResponse(true, songDtoList));
+        }
     }
 }

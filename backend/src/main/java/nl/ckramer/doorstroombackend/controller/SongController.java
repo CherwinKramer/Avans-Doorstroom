@@ -1,8 +1,12 @@
 package nl.ckramer.doorstroombackend.controller;
 
-import nl.ckramer.doorstroombackend.entity.Song;
-import nl.ckramer.doorstroombackend.entity.User;
+import nl.ckramer.doorstroombackend.controller.interf.CrudController;
+import nl.ckramer.doorstroombackend.entity.*;
+import nl.ckramer.doorstroombackend.model.dto.SongDto;
 import nl.ckramer.doorstroombackend.model.response.ApiResponse;
+import nl.ckramer.doorstroombackend.repository.AlbumRepository;
+import nl.ckramer.doorstroombackend.repository.ArtistRepository;
+import nl.ckramer.doorstroombackend.repository.GenreRepository;
 import nl.ckramer.doorstroombackend.repository.SongRepository;
 import nl.ckramer.doorstroombackend.security.CurrentUser;
 import nl.ckramer.doorstroombackend.security.UserPrincipal;
@@ -14,20 +18,31 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/song")
-public class SongController extends CrudController<Song>{
+public class SongController extends CrudController<SongDto> {
 
     @Autowired
     SongRepository songRepository;
 
     @Autowired
+    ArtistRepository artistRepository;
+
+    @Autowired
+    GenreRepository genreRepository;
+
+    @Autowired
+    AlbumRepository albumRepository;
+
+    @Autowired
     SongService songService;
 
     @Override
-    @Transactional
     @GetMapping("/{id}")
     public ResponseEntity<?> view(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
         User user = findUserByUserPrincipal(userPrincipal);
@@ -37,29 +52,45 @@ public class SongController extends CrudController<Song>{
             return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
         }
 
-        return ResponseEntity.ok(apiResponse);
+        SongDto songDto = new SongDto((Song) apiResponse.getObject());
+        return ResponseEntity.ok(new ApiResponse(true, songDto));
     }
 
     @Override
-    @Transactional
     @GetMapping
     public ResponseEntity<?> viewAll(@CurrentUser UserPrincipal userPrincipal) {
         User user = findUserByUserPrincipal(userPrincipal);
-        List<Song> songList = songRepository.findAllByUserAndDeletedFalse(user);
-        return ResponseEntity.ok(new ApiResponse(true, songList));
+
+        List<SongDto> songDtoList = new ArrayList<>();
+        for (Song song : songRepository.findAllByUserAndDeletedFalse(user)) {
+            songDtoList.add(new SongDto(song));
+        }
+
+        return ResponseEntity.ok(new ApiResponse(true, songDtoList));
     }
 
     @PostMapping
     @Transactional
-    public ResponseEntity<?> create(@CurrentUser UserPrincipal userPrincipal, @Valid @RequestBody Song song) {
+    public ResponseEntity<?> create(@CurrentUser UserPrincipal userPrincipal, @Valid @RequestBody SongDto songDto) {
+        Song song = initializeSongByDto(songDto);
 
         ApiResponse apiResponse = songService.validateSong(song);
         if (!apiResponse.getSuccess()) {
             return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
         }
+        return ResponseEntity.ok(new ApiResponse(true, "Song has been succesfully created!", new SongDto(songRepository.save(song))));
+    }
 
-        song = songRepository.save(song);
-        return ResponseEntity.ok(new ApiResponse(true, "Song has been succesfully created!", song));
+    @PutMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> update(@CurrentUser UserPrincipal userPrincipal, @RequestBody SongDto songDto, @PathVariable Long id) {
+        Song song = initializeSongByDto(songDto);
+
+        ApiResponse apiResponse = songService.validateSong(song);
+        if (!apiResponse.getSuccess()) {
+            return new ResponseEntity<>(apiResponse, HttpStatus.BAD_REQUEST);
+        }
+        return ResponseEntity.ok(new ApiResponse(true, "Song has been succesfully updated!", new SongDto(songRepository.save(song))));
     }
 
     @DeleteMapping("/{id}")
@@ -78,6 +109,32 @@ public class SongController extends CrudController<Song>{
         }
         song.setDeleted(true);
         songRepository.save(song);
-        return new ResponseEntity<>(new ApiResponse(true, "Song has been deleted succesfully!", song), HttpStatus.OK);
+        return new ResponseEntity<>(new ApiResponse(true, "Song has been deleted succesfully!", new SongDto(song)), HttpStatus.OK);
     }
+
+    private Song initializeSongByDto(SongDto songDto) {
+        Song song = null;
+        if (songDto.getId() != null) {
+            song = songRepository.getOne(songDto.getId());
+        }
+        if (song == null) song = new Song();
+        song.setName(songDto.getName());
+        song.setUrl(songDto.getUrl());
+
+        Optional<Artist> songOptional = songDto.getArtistDto().getId() != null ? artistRepository.findById(songDto.getArtistDto().getId()) : Optional.empty();
+        song.setArtist(songOptional.orElse(null));
+
+        Optional<Genre> genreOptional = songDto.getGenreDto().getId() != null ? genreRepository.findById(songDto.getGenreDto().getId()) : Optional.empty();
+        song.setGenre(genreOptional.orElse(null));
+
+        Optional<Album> albumOptional = songDto.getAlbumDto().getId() != null ? albumRepository.findById(songDto.getAlbumDto().getId()) : Optional.empty();
+        song.setAlbum(albumOptional.orElse(null));
+
+        if (songDto.getFeaturedArtistIds() != null && !songDto.getFeaturedArtistIds().isEmpty()) {
+            List<Artist> featuredArtistList = artistRepository.findAllById(songDto.getFeaturedArtistIds());
+            song.setFeaturedArtists(new HashSet<>(featuredArtistList));
+        }
+        return song;
+    }
+
 }

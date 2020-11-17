@@ -1,11 +1,8 @@
 package nl.ckramer.doorstroombackend.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import nl.ckramer.doorstroombackend.entity.Permission;
-import nl.ckramer.doorstroombackend.entity.Role;
 import nl.ckramer.doorstroombackend.entity.User;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
@@ -38,12 +35,6 @@ public class UserPrincipal implements UserDetails {
 
     public static UserPrincipal create(User user) {
         List<GrantedAuthority> authorities = new ArrayList<>();
-        if (user != null && user.getRole() != null) {
-            Role role = user.getRole();
-            for(Permission permission : role.getPermissions()){
-                authorities.add(new SimpleGrantedAuthority(permission.getName()));
-            }
-        }
 
         return new UserPrincipal(
                 user.getId(),

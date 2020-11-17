@@ -17,20 +17,16 @@ public class SongService {
     private SongRepository songRepository;
 
     public ApiResponse validateSong(Song song) {
-        if (StringUtils.isAnyEmpty(song.getName()) || song.getArtist() == null) {
+        if (StringUtils.isAnyEmpty(song.getName()) || song.getArtist() == null || song.getGenre() == null) {
             return new ApiResponse(false, "The song was not valid, please try again.");
         }
         return new ApiResponse(true);
     }
 
     public ApiResponse findById(Long id, User user) {
-        Optional<Song> songOptional = songRepository.findById(id);
-
+        Optional<Song> songOptional = songRepository.findByIdAndUser(id, user);
         if (songOptional.isPresent()) {
-            Song song = songOptional.get();
-            if (song.getUser() == user) {
-                return new ApiResponse(true, song);
-            }
+            return new ApiResponse(true, songOptional.get());
         }
         return new ApiResponse(false, "You don't have access to view this content");
     }

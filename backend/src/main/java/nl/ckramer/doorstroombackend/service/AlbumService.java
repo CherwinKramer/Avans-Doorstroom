@@ -24,13 +24,9 @@ public class AlbumService {
     }
 
     public ApiResponse findById(Long id, User user) {
-        Optional<Album> albumOptional = albumRepository.findById(id);
-
+        Optional<Album> albumOptional = albumRepository.findByIdAndUser(id, user);
         if (albumOptional.isPresent()) {
-            Album album = albumOptional.get();
-            if (album.getUser() == user) {
-                return new ApiResponse(true, album);
-            }
+            return new ApiResponse(true, albumOptional.get());
         }
         return new ApiResponse(false, "You don't have access to view this content");
     }

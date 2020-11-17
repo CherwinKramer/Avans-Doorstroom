@@ -25,8 +25,9 @@ import {getCurrentUser} from "./utilities/JWTAuth";
 import PrivateRoute from "./utilities/PrivateRoute";
 import {ACCESS_TOKEN, MENU} from "./Constants";
 import {CSSTransition} from "react-transition-group";
-import {Crud} from "./pages/Crud";
-import {Album} from "./components/Album/Album";
+import {Album} from "./components/album/Album";
+import {Song} from "./components/song/Song";
+import {Genre} from "./components/Genre/Genre";
 
 class App extends Component {
 
@@ -63,8 +64,6 @@ class App extends Component {
                     isAuthenticated: true,
                     isLoading: false
                 });
-
-                console.log(response);
             }
         }).catch(error => {
             this.setState({
@@ -98,8 +97,6 @@ class App extends Component {
             isLoading: false
         }, () => {
             this.props.history.push("/");
-            //FIXME: remove me
-            console.log(this.state.currentUser);
         });
     }
 
@@ -139,9 +136,6 @@ class App extends Component {
 
                 <CSSTransition classNames="layout-sidebar" timeout={{ enter: 200, exit: 200 }} in={!this.state.staticMenuInactive} unmountOnExit>
                     <div ref={(el) => this.sidebar = el} className={sidebarClassName}>
-                        {/*<div className="layout-logo">*/}
-                        {/*    <img alt="Logo" src={logo}/>*/}
-                        {/*</div>*/}
                         <AppProfile user={this.state.currentUser} logout={this.handleLogout}/>
                         <AppMenu user={this.state.currentUser} model={this.menu} onMenuItemClick={this.onMenuItemClick}/>
                     </div>
@@ -161,7 +155,10 @@ class App extends Component {
                         <PrivateRoute path="/album" component={Album} user={this.state.currentUser}
                                       authenticated={this.state.isAuthenticated}/>
 
-                        <PrivateRoute path="/crud" component={Crud} user={this.state.currentUser}
+                        <PrivateRoute path="/song" component={Song} user={this.state.currentUser}
+                                      authenticated={this.state.isAuthenticated}/>
+
+                        <PrivateRoute path="/genre" component={Genre} user={this.state.currentUser}
                                       authenticated={this.state.isAuthenticated}/>
                     </Switch>
                 </div>
@@ -179,7 +176,6 @@ class App extends Component {
                 getCurrentUser().then(response => {
                     this.handleLogin(response);
                 }).catch(error => {
-                    console.log(error);
                 });
             }
         }

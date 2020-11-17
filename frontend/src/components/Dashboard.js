@@ -1,19 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Panel } from 'primereact/panel';
-import { Checkbox } from 'primereact/checkbox';
-import { Button } from 'primereact/button';
-import { Dropdown } from 'primereact/dropdown';
-import { InputText } from 'primereact/inputtext';
-import { Chart } from 'primereact/chart';
-import { ProgressBar } from 'primereact/progressbar';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { FullCalendar } from 'primereact/fullcalendar';
+import React, {useState} from 'react';
+import {Panel} from 'primereact/panel';
+import {Checkbox} from 'primereact/checkbox';
+import {Button} from 'primereact/button';
+import {Dropdown} from 'primereact/dropdown';
+import {InputText} from 'primereact/inputtext';
+import {Chart} from 'primereact/chart';
+import {ProgressBar} from 'primereact/progressbar';
+import {DataTable} from 'primereact/datatable';
+import {Column} from 'primereact/column';
+import {FullCalendar} from 'primereact/fullcalendar';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { ProductService } from '../service/ProductService';
-import { EventService } from '../service/EventService';
 
 const dropdownCities = [
     { name: 'New York', code: 'NY' },
@@ -58,15 +56,8 @@ export const Dashboard = () => {
 
     const [tasksCheckbox, setTasksCheckbox] = useState([]);
     const [dropdownCity, setDropdownCity] = useState(null);
-    const [events, setEvents] = useState(null);
-    const [products, setProducts] = useState(null);
-
-    useEffect(() => {
-        const productService = new ProductService();
-        const eventService = new EventService();
-        productService.getProductsSmall().then(data => setProducts(data));
-        eventService.getEvents().then(data => setEvents(data));
-    }, []);
+    const [events] = useState(null);
+    const [products] = useState(null);
 
     const formatCurrency = (value) => {
         return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });

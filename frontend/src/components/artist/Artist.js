@@ -3,10 +3,11 @@ import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {Button} from 'primereact/button';
 import {Toolbar} from 'primereact/toolbar';
-import {createArtist, deleteArtist, getAlbumsForArtist, getArtists, updateArtist} from "../../service/ArtistService";
+import {createArtist, deleteArtist, getAlbumsForArtist, getArtist, getArtists, updateArtist} from "../../service/ArtistService";
 import {Dialog} from "primereact/dialog";
 import {InputText} from "primereact/inputtext";
 import {Toast} from "primereact/toast";
+import {DataScroller} from "primereact/datascroller";
 
 export class Artist extends Component {
 
@@ -20,12 +21,13 @@ export class Artist extends Component {
                 surname: '',
                 place: ''
             },
-            artists: {},
+            artists: [],
             dialogVisible: false,
             deleteDialogVisible: false,
             albumDialogVisible: false
         };
 
+        this.openEditDialog = this.openEditDialog.bind(this);
         this.findAlbumsByArtist = this.findAlbumsByArtist.bind(this);
         this.resetValues = this.resetValues.bind(this);
         this.saveArtist = this.saveArtist.bind(this);
@@ -55,7 +57,7 @@ export class Artist extends Component {
             dialogVisible: false,
             deleteDialogVisible: false,
             albumDialogVisible: false,
-            expandedRows: ''
+            expandedRows: []
         });
     }
 
@@ -72,7 +74,6 @@ export class Artist extends Component {
     }
 
     findAlbumsByArtist(artist) {
-        console.log(artist);
         getAlbumsForArtist(artist.id).then(data => {
             this.setState({
                 albums: data.object,
@@ -81,11 +82,20 @@ export class Artist extends Component {
         });
     }
 
+    openEditDialog(rowData) {
+        getArtist(rowData.id).then(artistData => {
+            console.log(artistData);
+            this.setState({
+                artist: artistData.object,
+                dialogVisible: true
+            });
+        });
+    }
+
     saveArtist() {
         let artist = this.state.artist;
         let artists = this.state.artists;
         let creation = !artist.id;
-        console.log('creation ' + creation);
 
         let failed = false;
         if (!artist.name) {
@@ -118,7 +128,6 @@ export class Artist extends Component {
                 this.resetValues();
                 this.toast.show({severity:'success', detail: r.message, life: 3000});
             }).catch(e => {
-                console.log(e);
                 this.toast.show({severity:'error', summary: e.error, detail:'An error occurred', life: 3000});
             });
         }
@@ -153,34 +162,10 @@ export class Artist extends Component {
             )
         }
 
-        const nameBodyTemplate = (rowData) => {
-            return (
-                <>
-                    {rowData.name}
-                </>
-            );
-        }
-
-        const surnameBodyTemplate = (rowData) => {
-            return (
-                <>
-                    {rowData.surname}
-                </>
-            );
-        }
-
-        const placeBodyTemplate = (rowData) => {
-            return (
-                <>
-                    {rowData.place}
-                </>
-            );
-        }
-
         const actionBodyTemplate = (rowData) => {
             return (
                 <div className="actions">
-                    <Button icon="pi pi-pencil" className="p-button-rounded p-button-success p-mr-2" onClick={() => {this.setState({dialogVisible: true, artist: rowData})}}/>
+                    <Button icon="pi pi-pencil" className="p-button-rounded p-button-success p-mr-2" onClick={() => {this.openEditDialog(rowData)}} />
                     <Button icon="pi pi-trash" className="p-button-rounded p-button-danger p-mr-2" onClick={() => {this.setState({deleteDialogVisible: true, artist: rowData})}}/>
                     <Button icon="pi pi-briefcase" className="p-button-rounded p-button-info p-mr-2" onClick={() => {this.findAlbumsByArtist(rowData)}}/>
                 </div>
@@ -190,7 +175,7 @@ export class Artist extends Component {
         const artistDialogFooter = (
             <>
                 <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={() => {this.setState({dialogVisible: false})}}/>
-                <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={this.saveArtist}/>
+                <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={() => this.saveArtist}/>
             </>
         );
 
@@ -201,16 +186,37 @@ export class Artist extends Component {
             </>
         );
 
+        const songItemTemplate = (data) => {
+            if (data) {
+                return (
+                    <div className="p-grid">
+                        <div className="p-col-4 p-m-3">
+                            <div>{data.artist.fullName}</div>
+                            <div>{data.name}</div>
+                        </div>
+                        <div className="p-col p-m-3">
+                            <div>{data.featuredArtistNames}</div>
+                        </div>
+                        <div className="p-col-1 p-m-3">
+                            {data.url && <Button icon="pi pi-play" className="p-button-rounded p-button-secondary" onClick={() => {
+                                window.open(data.url, "_blank")
+                            }}/>}
+                        </div>
+                    </div>
+                );
+            }
+            return "";
+        }
+
         const albumSongExpansionTemplate = (data) => {
-            return (
-                <div className="album-song-expansion">
-                    <DataTable value={data.songs} header="Songs" paginator rows={10} className="p-datatable-lg" emptyMessage="No songs found for this album">
-
-                        <Column field="name"></Column>
-
-                    </DataTable>
-                </div>
-            );
+            if (data) {
+                return (
+                    <div className="p-card">
+                        <DataScroller value={data.songs} itemTemplate={songItemTemplate} rows={5} inline scrollHeight="400px" header="Songs"/>
+                    </div>
+                );
+            }
+            return "";
         }
 
         return (
@@ -227,9 +233,9 @@ export class Artist extends Component {
                                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} artists"
                                    emptyMessage="No artists found." header="Manage Artists">
 
-                            <Column field="name" header="Name" sortable body={nameBodyTemplate} />
-                            <Column field="surname" header="Surname" sortable body={surnameBodyTemplate} />
-                            <Column field="place" header="Place" sortable body={placeBodyTemplate} />
+                            <Column field="name" header="Name" sortable />
+                            <Column field="surname" header="Surname" />
+                            <Column field="place" header="Place" sortable />
                             <Column body={actionBodyTemplate} />
 
                         </DataTable>
@@ -261,7 +267,7 @@ export class Artist extends Component {
                             </div>
                         </Dialog>
 
-                        <Dialog visible={this.state.albumDialogVisible} style={{width: '1000px'}} header="Albums" modal onHide={() => {this.setState({albums: {}, albumDialogVisible: false, expandedRows: ''})}}>
+                        <Dialog visible={this.state.albumDialogVisible} style={{width: '1000px'}} header="Albums" modal onHide={() => {this.setState({albums: {}, albumDialogVisible: false, expandedRows: []})}}>
                             <DataTable value={this.state.albums} paginator rows={10}
                                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                                        emptyMessage="No albums found." className="datatable-responsive" expandedRows={this.state.expandedRows}

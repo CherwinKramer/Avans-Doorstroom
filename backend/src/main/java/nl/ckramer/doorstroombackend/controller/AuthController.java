@@ -1,17 +1,14 @@
 package nl.ckramer.doorstroombackend.controller;
 
-import nl.ckramer.doorstroombackend.entity.Role;
 import nl.ckramer.doorstroombackend.entity.User;
 import nl.ckramer.doorstroombackend.model.request.UserRequest;
 import nl.ckramer.doorstroombackend.model.response.ApiResponse;
 import nl.ckramer.doorstroombackend.model.response.JwtAuthenticationResponse;
 import nl.ckramer.doorstroombackend.model.response.LoginResponse;
-import nl.ckramer.doorstroombackend.repository.RoleRepository;
 import nl.ckramer.doorstroombackend.repository.UserRepository;
 import nl.ckramer.doorstroombackend.security.CurrentUser;
 import nl.ckramer.doorstroombackend.security.JwtTokenProvider;
 import nl.ckramer.doorstroombackend.security.UserPrincipal;
-import nl.ckramer.doorstroombackend.service.RoleService;
 import nl.ckramer.doorstroombackend.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,16 +40,10 @@ public class AuthController {
     UserRepository userRepository;
 
     @Autowired
-    RoleRepository roleRepository;
-
-    @Autowired
     PasswordEncoder passwordEncoder;
 
     @Autowired
     JwtTokenProvider tokenProvider;
-
-    @Autowired
-    RoleService roleService;
 
     @Autowired
     UserService userService;
@@ -99,9 +90,6 @@ public class AuthController {
 
         // Creating user's account
         User user = new User(userRequest.getName(), userRequest.getSurname(), userRequest.getEmail(), passwordEncoder.encode(userRequest.getPassword()));
-        Role defaultRole = roleService.getDefaultRole();
-        user.setRole(defaultRole);
-
         user = userRepository.save(user);
 
         URI URILocation = ServletUriComponentsBuilder

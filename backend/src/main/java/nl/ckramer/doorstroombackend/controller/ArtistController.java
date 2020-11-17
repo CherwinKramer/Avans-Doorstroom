@@ -1,10 +1,12 @@
 package nl.ckramer.doorstroombackend.controller;
 
+import nl.ckramer.doorstroombackend.controller.interf.CrudController;
 import nl.ckramer.doorstroombackend.entity.Album;
 import nl.ckramer.doorstroombackend.entity.Artist;
 import nl.ckramer.doorstroombackend.entity.Song;
 import nl.ckramer.doorstroombackend.entity.User;
-import nl.ckramer.doorstroombackend.model.request.ArtistRequest;
+import nl.ckramer.doorstroombackend.model.dto.AlbumDto;
+import nl.ckramer.doorstroombackend.model.dto.ArtistDto;
 import nl.ckramer.doorstroombackend.model.response.ApiResponse;
 import nl.ckramer.doorstroombackend.repository.AlbumRepository;
 import nl.ckramer.doorstroombackend.repository.ArtistRepository;
@@ -19,12 +21,13 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/artist")
-public class ArtistController extends CrudController<ArtistRequest>{
+public class ArtistController extends CrudController<ArtistDto> {
 
     @Autowired
     ArtistRepository artistRepository;
@@ -39,23 +42,18 @@ public class ArtistController extends CrudController<ArtistRequest>{
     ArtistService artistService;
 
     @Override
-    @Transactional
     @GetMapping("/{id}")
     public ResponseEntity<?> view(@CurrentUser UserPrincipal userPrincipal, @PathVariable Long id) {
-        User user = findUserByUserPrincipal(userPrincipal);
-        Optional<Artist> artistOptional = artistRepository.findById(id);
+        Optional<Artist> artistOptional = artistRepository.findByIdAndUser(id, findUserByUserPrincipal(userPrincipal));
 
         if (artistOptional.isPresent()) {
             Artist artist = artistOptional.get();
-            if (artist.getUser() == user) {
-                return ResponseEntity.ok(new ApiResponse(true, artist));
-            }
+            return ResponseEntity.ok(new ApiResponse(true, artist));
         }
         return new ResponseEntity<>(new ApiResponse(false, "You don't have access to view this artist"), HttpStatus.FORBIDDEN);
     }
 
     @Override
-    @Transactional
     @GetMapping
     public ResponseEntity<?> viewAll(@CurrentUser UserPrincipal userPrincipal) {
         User user = findUserByUserPrincipal(userPrincipal);
@@ -72,11 +70,12 @@ public class ArtistController extends CrudController<ArtistRequest>{
             return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
         } else {
             Artist artist = (Artist) apiResponse.getObject();
-            List<Album> albumList = albumRepository.findAllByArtistAndDeletedFalse(artist);
-            for (Album album : albumList) {
+            List<AlbumDto> albumDtoList = new ArrayList<>();
+            for (Album album : albumRepository.findAllByArtistAndDeletedFalse(artist)) {
                 album.setSongs(songRepository.findAllByAlbumAndDeletedFalse(album));
+                albumDtoList.add(new AlbumDto(album));
             }
-            return ResponseEntity.ok(new ApiResponse(true, albumList));
+            return ResponseEntity.ok(new ApiResponse(true, albumDtoList));
         }
     }
 
@@ -97,9 +96,9 @@ public class ArtistController extends CrudController<ArtistRequest>{
 
     @PostMapping
     @Transactional
-    public ResponseEntity<?> create(@CurrentUser UserPrincipal userPrincipal, @RequestBody ArtistRequest request) {
+    public ResponseEntity<?> create(@CurrentUser UserPrincipal userPrincipal, @RequestBody ArtistDto artistDto) {
         Artist artist = new Artist();
-        artist.setArtistRequest(request);
+        artist.setArtistDto(artistDto);
 
         ApiResponse apiResponse = artistService.validateArtist(artist);
         if (!apiResponse.getSuccess()) {
@@ -112,18 +111,20 @@ public class ArtistController extends CrudController<ArtistRequest>{
 
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<?> update(@CurrentUser UserPrincipal userPrincipal, @Valid @RequestBody ArtistRequest artistRequest, @PathVariable Long id) {
-        Optional<Artist> oldOptional = artistRepository.findById(id);
-        Artist artist = oldOptional.orElse(null);
-        if (artist != null) artist.setArtistRequest(artistRequest);
+    public ResponseEntity<?> update(@CurrentUser UserPrincipal userPrincipal, @Valid @RequestBody ArtistDto artistDto, @PathVariable Long id) {
+        Optional<Artist> artistOptional = artistRepository.findById(id);
+        if (artistOptional.isEmpty()) {
+            return new ResponseEntity<>(new ApiResponse(false, "The data is not valid, please try again!"), HttpStatus.BAD_REQUEST);
+        }
+
+        Artist artist = artistOptional.get();
+        artist.setArtistDto(artistDto);
 
         ApiResponse apiResponse = artistService.validateArtist(artist);
         if (!apiResponse.getSuccess()) {
             return new ResponseEntity<>(new ApiResponse(false, "The data is not valid, please try again!"), HttpStatus.BAD_REQUEST);
         }
-
-        artist = artistRepository.save(artist);
-        return ResponseEntity.ok(new ApiResponse(true, "Artist has been succesfully created!", artist));
+        return ResponseEntity.ok(new ApiResponse(true, "Artist has been succesfully created!", new ArtistDto(artistRepository.save(artist))));
     }
 
     @DeleteMapping("/{id}")
@@ -136,6 +137,13 @@ public class ArtistController extends CrudController<ArtistRequest>{
                 if (artist.getDeleted()) {
                     return new ResponseEntity<>(new ApiResponse(false, "The artist has already been deleted!"), HttpStatus.BAD_REQUEST);
                 }
+
+                List<Song> songList = songRepository.findAllByFeaturedArtistsContains(artist);
+                for (Song song : songList) {
+                    song.getFeaturedArtists().remove(artist);
+                }
+                songRepository.saveAll(songList);
+
                 artist.setDeleted(true);
                 artistRepository.save(artist);
                 return new ResponseEntity<>(new ApiResponse(true, "Artist has been deleted succesfully!", artist), HttpStatus.OK);

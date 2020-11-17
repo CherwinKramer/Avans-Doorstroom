@@ -1,7 +1,6 @@
 package nl.ckramer.doorstroombackend.model.request;
 
 import lombok.Data;
-import nl.ckramer.doorstroombackend.entity.Role;
 
 @Data
 public class UserRequest {
@@ -12,7 +11,5 @@ public class UserRequest {
     private String surname;
     private String email;
     private String password;
-
-    private Role role;
 
 }

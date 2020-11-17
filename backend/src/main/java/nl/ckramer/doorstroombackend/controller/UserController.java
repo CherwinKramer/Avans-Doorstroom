@@ -1,13 +1,10 @@
 package nl.ckramer.doorstroombackend.controller;
 
-import nl.ckramer.doorstroombackend.entity.Role;
 import nl.ckramer.doorstroombackend.entity.User;
 import nl.ckramer.doorstroombackend.model.request.UserRequest;
 import nl.ckramer.doorstroombackend.model.response.ApiResponse;
-import nl.ckramer.doorstroombackend.repository.RoleRepository;
 import nl.ckramer.doorstroombackend.repository.UserRepository;
 import nl.ckramer.doorstroombackend.security.JwtTokenProvider;
-import nl.ckramer.doorstroombackend.service.RoleService;
 import nl.ckramer.doorstroombackend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -33,12 +30,6 @@ public class UserController {
     UserRepository userRepository;
 
     @Autowired
-    RoleRepository roleRepository;
-
-    @Autowired
-    RoleService roleService;
-
-    @Autowired
     UserService userService;
 
     @Autowired
@@ -58,13 +49,6 @@ public class UserController {
 
         // Creating user's account
         User user = new User(userRequest.getName(), userRequest.getSurname(), userRequest.getEmail(), passwordEncoder.encode(userRequest.getPassword()));
-        if (userRequest.getRole() != null) {
-            user.setRole(userRequest.getRole());
-        } else {
-            Role defaultRole = roleService.getDefaultRole();
-            user.setRole(defaultRole);
-        }
-
         user = userRepository.save(user);
 
         URI URILocation = ServletUriComponentsBuilder.fromCurrentContextPath().path("/users/{email}").buildAndExpand(user.getEmail()).toUri();
