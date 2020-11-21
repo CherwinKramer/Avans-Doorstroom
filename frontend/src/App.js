@@ -143,10 +143,10 @@ class App extends Component {
 
                 <div className="layout-main">
                     <Switch>
-                        <PrivateRoute path="/" exact component={Dashboard} user={this.state.currentUser}
+                        <PrivateRoute path="/" exact component={Song} user={this.state.currentUser}
                                       authenticated={this.state.isAuthenticated}/>
 
-                        <PrivateRoute path="/dashboard" component={Dashboard} user={this.state.currentUser}
+                        <PrivateRoute path="/dashboard" component={Song} user={this.state.currentUser}
                                       authenticated={this.state.isAuthenticated}/>
 
                         <PrivateRoute path="/artist" component={Artist} user={this.state.currentUser}

@@ -4,6 +4,7 @@ import {Button} from 'primereact/button';
 import {Panel} from 'primereact/panel';
 import {ACCESS_TOKEN} from "../../Constants";
 import {handleRegistration} from "../../utilities/JWTAuth";
+import {Toast} from "primereact/toast";
 
 export class Register extends Component {
 
@@ -52,34 +53,28 @@ export class Register extends Component {
         };
 
         if (registerRequest.name.length === 0) {
-            return
+            return;
         }
 
         if (registerRequest.surname.length === 0) {
-            return
+            return;
         }
 
         if (registerRequest.email.length === 0) {
-            return
+            return;
         }
 
         if (registerRequest.password.length === 0) {
-            return
+            return;
         }
 
         handleRegistration(registerRequest)
-            .then(response => {
-                // notifier.success('You successfully logged in!');
-                localStorage.setItem(ACCESS_TOKEN, response.accessToken);
-                this.props.onLogin(response);
-
-            })
-            .catch(error => {
-                if (error.status === 401) {
-                    // notifier.error("Your email or password is incorrect. Please try again!");
-                } else {
-                    // notifier.error(error.message || 'Sorry! Something went wrong. Please try again!');
-                }
+            .then(r => {
+                console.log(r);
+                localStorage.setItem(ACCESS_TOKEN, r.object.accessToken);
+                this.props.onLogin(r);
+            }).catch(error => {
+                this.toast.show({severity:'error', detail: error.message, life: 3000});
             });
 
 
@@ -98,6 +93,7 @@ export class Register extends Component {
 
         return (
             <div>
+                <Toast ref={(el) => this.toast = el} />
                 <Panel className="loginPanel" header="Register" style={styles}>
 
                     <form className="onboard-form" onSubmit={this.handleSubmit}>

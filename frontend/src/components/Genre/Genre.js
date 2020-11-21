@@ -134,7 +134,7 @@ export class Genre extends Component {
         const genreDialogFooter = (
             <>
                 <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={() => {this.setState({dialogVisible: false})}}/>
-                <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={() => this.saveGenre}/>
+                <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={this.saveGenre}/>
             </>
         );
 

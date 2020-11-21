@@ -66,17 +66,8 @@ public class AuthController {
             return new ResponseEntity<>(new ApiResponse(false, "The registration request was not valid, please try again."), HttpStatus.BAD_REQUEST);
         }
 
-        Authentication authentication;
-        try {
-            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
-        } catch (AuthenticationException e) {
-            return new ResponseEntity<>(new ApiResponse(false, "The email or password is incorrect, please try again."), HttpStatus.BAD_REQUEST);
-        }
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        String jwt = tokenProvider.generateToken(authentication);
-        return new ResponseEntity<>(new ApiResponse(true, new LoginResponse(new JwtAuthenticationResponse(jwt).getAccessToken(), userPrincipal.getEmail(), userPrincipal.getName(), userPrincipal.getSurname(), userPrincipal.getId())), HttpStatus.OK);
+        LoginResponse loginResponse = generateJWTAuthenticationResponse(email, password);
+        return new ResponseEntity<>(new ApiResponse(true, loginResponse), HttpStatus.OK);
     }
 
     @PostMapping("/register")
@@ -96,6 +87,23 @@ public class AuthController {
                 .fromCurrentContextPath().path("/users/{email}")
                 .buildAndExpand(user.getEmail()).toUri();
 
-        return ResponseEntity.created(URILocation).body(new ApiResponse(true, "User registered successfully", user));
+
+        LoginResponse loginResponse = generateJWTAuthenticationResponse(userRequest.getEmail(), userRequest.getPassword());
+        return ResponseEntity.created(URILocation).body(new ApiResponse(true, "User registered successfully", loginResponse));
     }
+
+    private LoginResponse generateJWTAuthenticationResponse(String email, String password) {
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+        } catch (AuthenticationException e) {
+            return null;
+        }
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        String jwt = tokenProvider.generateToken(authentication);
+        return new LoginResponse(new JwtAuthenticationResponse(jwt).getAccessToken(), userPrincipal.getEmail(), userPrincipal.getName(), userPrincipal.getSurname(), userPrincipal.getId());
+    }
+
 }

@@ -6,7 +6,7 @@ import {Toolbar} from 'primereact/toolbar';
 import {createAlbum, deleteAlbum, getAlbum, getAlbums, getSongsForAlbum, updateAlbum} from "../../service/AlbumService";
 import {Dialog} from "primereact/dialog";
 import {InputText} from "primereact/inputtext";
-import {getAlbumsForArtist, getArtists} from "../../service/ArtistService";
+import {getArtists} from "../../service/ArtistService";
 import {Dropdown} from "primereact/dropdown";
 import {Toast} from "primereact/toast";
 
@@ -175,7 +175,7 @@ export class Album extends Component {
         const albumDialogFooter = (
             <>
                 <Button label="Cancel" icon="pi pi-times" className="p-button-text" onClick={() => {this.setState({dialogVisible: false})}}/>
-                <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={() => this.saveAlbum}/>
+                <Button label="Save" icon="pi pi-check" className="p-button-text" onClick={this.saveAlbum}/>
             </>
         );
 

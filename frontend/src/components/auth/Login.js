@@ -5,6 +5,7 @@ import {Button} from 'primereact/button';
 import {Panel} from 'primereact/panel';
 import {ACCESS_TOKEN} from "../../Constants";
 import {handleLogin} from "../../utilities/JWTAuth";
+import {Toast} from "primereact/toast";
 
 export class Login extends Component {
 
@@ -48,17 +49,10 @@ export class Login extends Component {
 
         handleLogin(loginRequest)
             .then(response => {
-                // notifier.success('You successfully logged in!');
                 localStorage.setItem(ACCESS_TOKEN, response.object.accessToken);
                 this.props.onLogin(response);
-
-            })
-            .catch(error => {
-                if (error.status === 401) {
-                    // notifier.error("Your email or password is incorrect. Please try again!");
-                } else {
-                    // notifier.error(error.message || 'Sorry! Something went wrong. Please try again!');
-                }
+            }).catch(error => {
+                this.toast.show({severity:'error', detail: error.message, life: 3000});
             });
 
         this.setState({password: ''});
@@ -75,6 +69,7 @@ export class Login extends Component {
 
         return (
             <div>
+                <Toast ref={(el) => this.toast = el} />
                 <Panel className="loginPanel" header="Log in" style={styles}>
 
                     <form className="onboard-form" onSubmit={this.handleSubmit}>
