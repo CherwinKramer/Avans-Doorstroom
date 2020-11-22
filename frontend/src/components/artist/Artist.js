@@ -220,7 +220,7 @@ export class Artist extends Component {
             if (data) {
                 return (
                     <div className="p-card">
-                        <DataScroller value={data.songs} itemTemplate={songItemTemplate} rows={5} inline scrollHeight="400px" header="Songs"/>
+                        <DataScroller value={data.songs} itemTemplate={songItemTemplate} rows={5} inline scrollHeight="400px" header="Songs" />
                     </div>
                 );
             }
