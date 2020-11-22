@@ -24,6 +24,14 @@ export function getAlbumsForArtist(id) {
     });
 }
 
+export function getSongsForArtist(id) {
+
+    return request({
+        url: SERVER_URL + "/artist/" + id + "/songs",
+        method: 'GET'
+    });
+}
+
 export function deleteArtist(artistRequest) {
     const id = artistRequest.id;
     return request({

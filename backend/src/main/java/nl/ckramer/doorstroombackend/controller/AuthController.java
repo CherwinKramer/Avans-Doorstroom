@@ -67,6 +67,9 @@ public class AuthController {
         }
 
         LoginResponse loginResponse = generateJWTAuthenticationResponse(email, password);
+        if (loginResponse == null) {
+            return new ResponseEntity<>(new ApiResponse(false, "Wrong credentials!"), HttpStatus.BAD_REQUEST);
+        }
         return new ResponseEntity<>(new ApiResponse(true, loginResponse), HttpStatus.OK);
     }
 

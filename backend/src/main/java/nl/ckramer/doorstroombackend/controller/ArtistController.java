@@ -7,6 +7,7 @@ import nl.ckramer.doorstroombackend.entity.Song;
 import nl.ckramer.doorstroombackend.entity.User;
 import nl.ckramer.doorstroombackend.model.dto.AlbumDto;
 import nl.ckramer.doorstroombackend.model.dto.ArtistDto;
+import nl.ckramer.doorstroombackend.model.dto.SongDto;
 import nl.ckramer.doorstroombackend.model.response.ApiResponse;
 import nl.ckramer.doorstroombackend.repository.AlbumRepository;
 import nl.ckramer.doorstroombackend.repository.ArtistRepository;
@@ -89,8 +90,11 @@ public class ArtistController extends CrudController<ArtistDto> {
             return new ResponseEntity<>(apiResponse, HttpStatus.FORBIDDEN);
         } else {
             Artist artist = (Artist) apiResponse.getObject();
-            List<Song> songList = songRepository.findAllByArtistAndDeletedFalse(artist);
-            return ResponseEntity.ok(new ApiResponse(true, songList));
+            List<SongDto> songDtoList = new ArrayList<>();
+            for (Song song : songRepository.findAllByArtistAndDeletedFalse(artist)) {
+                songDtoList.add(new SongDto(song));
+            }
+            return ResponseEntity.ok(new ApiResponse(true, songDtoList));
         }
     }
 
@@ -138,11 +142,20 @@ public class ArtistController extends CrudController<ArtistDto> {
                     return new ResponseEntity<>(new ApiResponse(false, "The artist has already been deleted!"), HttpStatus.BAD_REQUEST);
                 }
 
-                List<Song> songList = songRepository.findAllByFeaturedArtistsContains(artist);
+                List<Song> songList = songRepository.findAllFeaturedByArtist(artist);
                 for (Song song : songList) {
+                    if (song.getArtist().equals(artist)) {
+                        song.setDeleted(true);
+                    }
                     song.getFeaturedArtists().remove(artist);
                 }
                 songRepository.saveAll(songList);
+
+                List<Album> albumList = albumRepository.findAllByArtistAndDeletedFalse(artist);
+                for (Album album : albumList) {
+                    album.setDeleted(true);
+                }
+                albumRepository.saveAll(albumList);
 
                 artist.setDeleted(true);
                 artistRepository.save(artist);

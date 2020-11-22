@@ -1,33 +1,30 @@
 import React, {Component} from 'react';
-import classNames from 'classnames';
-import {AppTopbar} from './AppTopbar';
-import {AppFooter} from './AppFooter';
-import {AppMenu} from './AppMenu';
-import {AppProfile} from './AppProfile';
 import {Redirect, Route, Switch, withRouter} from 'react-router-dom';
-import {Dashboard} from './components/Dashboard';
-import {Artist} from './components/artist/Artist';
+import classNames from 'classnames';
+import PrivateRoute from "./utilities/PrivateRoute";
 
-import 'primereact/resources/themes/saga-orange/theme.css';
+import {CSSTransition} from "react-transition-group";
+import {getCurrentUser} from "./utilities/JWTAuth";
+import {ACCESS_TOKEN, MENU} from "./Constants";
+
+import 'primereact/resources/themes/saga-blue/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 import 'prismjs/themes/prism-coy.css';
-import '@fullcalendar/core/main.css';
-import '@fullcalendar/daygrid/main.css';
-import '@fullcalendar/timegrid/main.css';
-import './layout/flags/flags.css';
 import './layout/layout.scss';
 import './App.scss';
+
+import {AppTopbar} from './AppTopbar';
+import {AppFooter} from './AppFooter';
+import {AppMenu} from './AppMenu';
+import {AppProfile} from './AppProfile';
 import {Login} from "./components/auth/Login";
 import {Register} from "./components/auth/Register";
-import {getCurrentUser} from "./utilities/JWTAuth";
-import PrivateRoute from "./utilities/PrivateRoute";
-import {ACCESS_TOKEN, MENU} from "./Constants";
-import {CSSTransition} from "react-transition-group";
+import {Artist} from './components/artist/Artist';
 import {Album} from "./components/album/Album";
 import {Song} from "./components/song/Song";
-import {Genre} from "./components/Genre/Genre";
+import {Genre} from "./components/Genre/Genre"
 
 class App extends Component {
 
@@ -40,17 +37,16 @@ class App extends Component {
             isLoading: true, // default true, to prevent rending without user is loaded for private route.
 
             staticMenuInactive: false,
+            mobileMenuActive: false,
+            menuClick: false,
+            sidebar: null
         }
 
         this.handleLogout = this.handleLogout.bind(this);
         this.loadCurrentUser = this.loadCurrentUser.bind(this);
         this.handleLogin = this.handleLogin.bind(this);
-
-        this.onToggleMenu = this.onToggleMenu.bind(this);
-        this.onMenuItemClick = this.onMenuItemClick.bind(this);
         this.menu = MENU;
     }
-
 
     loadCurrentUser() {
         this.setState({
@@ -100,17 +96,6 @@ class App extends Component {
         });
     }
 
-    onMenuItemClick(event) {
-    }
-
-    onToggleMenu(event) {
-        this.setState({
-            staticMenuInactive: !this.state.staticMenuInactive
-        });
-
-        event.preventDefault();
-    }
-
     LoginContainer = () => {
         return (
             <div className="container">
@@ -126,51 +111,122 @@ class App extends Component {
     DefaultContainer = () => {
         const wrapperClass = classNames('layout-wrapper', {
             'layout-static': true,
-            'layout-static-sidebar-inactive': this.state.staticMenuInactive
+            'layout-static-sidebar-inactive': this.state.staticMenuInactive,
+            'layout-mobile-sidebar-active': this.state.mobileMenuActive
         });
         const sidebarClassName = classNames("layout-sidebar", 'layout-sidebar-dark');
 
-        return (
-            <div className={wrapperClass}>
-                <AppTopbar onToggleMenu={this.onToggleMenu} logout={this.handleLogout}/>
+        const isDesktop = () => {
+            return window.innerWidth > 1024;
+        }
 
-                <CSSTransition classNames="layout-sidebar" timeout={{ enter: 200, exit: 200 }} in={!this.state.staticMenuInactive} unmountOnExit>
-                    <div ref={(el) => this.sidebar = el} className={sidebarClassName}>
+        const addClass = (element, className) => {
+            if (element.classList)
+                element.classList.add(className);
+            else
+                element.className += ' ' + className;
+        }
+
+        const removeClass = (element, className) => {
+            if (element.classList)
+                element.classList.remove(className);
+            else
+                element.className = element.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
+        }
+
+        if (this.state.mobileMenuActive) {
+            addClass(document.body, 'body-overflow-hidden');
+        } else {
+            removeClass(document.body, 'body-overflow-hidden');
+        }
+
+        const onToggleMenu = (event) => {
+            if (isDesktop()) {
+                this.setState({
+                    menuClick: true,
+                    staticMenuInactive: !this.state.staticMenuInactive
+                })
+            } else {
+                this.setState({
+                    menuClick: true,
+                    mobileMenuActive: !this.state.mobileMenuActive
+                })
+            }
+            event.preventDefault();
+        }
+
+        const onWrapperClick = (event) => {
+            if (!this.state.menuClick) {
+                this.setState({
+                    mobileMenuActive: false
+                })
+            }
+            this.setState({
+                menuClick: false,
+            })
+        }
+
+        const isSidebarVisible = () => {
+            if (isDesktop()) {
+                return !this.state.staticMenuInactive
+            }
+            return true;
+        }
+
+        const onSidebarClick = () => {
+            this.setState({
+                menuClick: true
+            });
+        }
+
+        const onMenuItemClick = (event) => {
+            if (!event.item.items) {
+                this.setState({
+                    mobileMenuActive: false
+                })
+            }
+        }
+
+        return (
+
+            <div className={wrapperClass} onClick={onWrapperClick}>
+                <AppTopbar onToggleMenu={onToggleMenu} logout={this.handleLogout}/>
+
+                <CSSTransition classNames="layout-sidebar" timeout={{ enter: 200, exit: 200 }} in={isSidebarVisible()} unmountOnExit>
+                    <div ref={this.state.sidebar} className={sidebarClassName} onClick={onSidebarClick}>
                         <AppProfile user={this.state.currentUser} logout={this.handleLogout}/>
-                        <AppMenu user={this.state.currentUser} model={this.menu} onMenuItemClick={this.onMenuItemClick}/>
+                        <AppMenu user={this.state.currentUser} model={this.menu} onMenuItemClick={onMenuItemClick} />
                     </div>
                 </CSSTransition>
 
                 <div className="layout-main">
-                    <Switch>
-                        <PrivateRoute path="/" exact component={Song} user={this.state.currentUser}
-                                      authenticated={this.state.isAuthenticated}/>
+                    <PrivateRoute path="/" exact component={Song} user={this.state.currentUser}
+                                  authenticated={this.state.isAuthenticated}/>
 
-                        <PrivateRoute path="/dashboard" component={Song} user={this.state.currentUser}
-                                      authenticated={this.state.isAuthenticated}/>
+                    <PrivateRoute path="/dashboard" component={Song} user={this.state.currentUser}
+                                  authenticated={this.state.isAuthenticated}/>
 
-                        <PrivateRoute path="/artist" component={Artist} user={this.state.currentUser}
-                                      authenticated={this.state.isAuthenticated}/>
+                    <PrivateRoute path="/artist" component={Artist} user={this.state.currentUser}
+                                  authenticated={this.state.isAuthenticated}/>
 
-                        <PrivateRoute path="/album" component={Album} user={this.state.currentUser}
-                                      authenticated={this.state.isAuthenticated}/>
+                    <PrivateRoute path="/album" component={Album} user={this.state.currentUser}
+                                  authenticated={this.state.isAuthenticated}/>
 
-                        <PrivateRoute path="/song" component={Song} user={this.state.currentUser}
-                                      authenticated={this.state.isAuthenticated}/>
+                    <PrivateRoute path="/song" component={Song} user={this.state.currentUser}
+                                  authenticated={this.state.isAuthenticated}/>
 
-                        <PrivateRoute path="/genre" component={Genre} user={this.state.currentUser}
-                                      authenticated={this.state.isAuthenticated}/>
-                    </Switch>
+                    <PrivateRoute path="/genre" component={Genre} user={this.state.currentUser}
+                                  authenticated={this.state.isAuthenticated}/>
                 </div>
 
-                <AppFooter/>
+                <AppFooter />
 
-                <div className="layout-mask"/>
             </div>
         );
     };
 
     render() {
+
         if (!this.state.isAuthenticated) {
             if (localStorage.getItem(ACCESS_TOKEN)) {
                 getCurrentUser().then(response => {
@@ -192,3 +248,4 @@ class App extends Component {
 }
 
 export default withRouter(App);
+

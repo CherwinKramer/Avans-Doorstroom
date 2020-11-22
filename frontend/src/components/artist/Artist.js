@@ -3,7 +3,7 @@ import {DataTable} from 'primereact/datatable';
 import {Column} from 'primereact/column';
 import {Button} from 'primereact/button';
 import {Toolbar} from 'primereact/toolbar';
-import {createArtist, deleteArtist, getAlbumsForArtist, getArtist, getArtists, updateArtist} from "../../service/ArtistService";
+import {createArtist, deleteArtist, getAlbumsForArtist, getArtist, getArtists, getSongsForArtist, updateArtist} from "../../service/ArtistService";
 import {Dialog} from "primereact/dialog";
 import {InputText} from "primereact/inputtext";
 import {Toast} from "primereact/toast";
@@ -80,6 +80,14 @@ export class Artist extends Component {
                 albumDialogVisible: true
             })
         });
+
+        getSongsForArtist(artist.id).then(data => {
+            this.setState({
+                songs: data.object,
+                albumDialogVisible: true
+            })
+        });
+
     }
 
     openEditDialog(rowData) {
@@ -267,16 +275,25 @@ export class Artist extends Component {
                             </div>
                         </Dialog>
 
-                        <Dialog visible={this.state.albumDialogVisible} style={{width: '1000px'}} header="Albums" modal onHide={() => {this.setState({albums: {}, albumDialogVisible: false, expandedRows: []})}}>
-                            <DataTable value={this.state.albums} paginator rows={10}
-                                       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                                       emptyMessage="No albums found." className="datatable-responsive" expandedRows={this.state.expandedRows}
-                                       rowExpansionTemplate={albumSongExpansionTemplate} onRowToggle={(e) => this.setState({ expandedRows: e.data })}>
+                        <Dialog visible={this.state.albumDialogVisible} style={{width: '1000px'}} header="Albums" modal onHide={() => {this.setState({albums: [], songs: [], albumDialogVisible: false, expandedRows: []})}}>
+                            <div>
+                                <DataTable value={this.state.albums} paginator rows={10} header="List of all albums"
+                                           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                                           emptyMessage="No albums found." className="datatable-responsive" expandedRows={this.state.expandedRows}
+                                           rowExpansionTemplate={albumSongExpansionTemplate} onRowToggle={(e) => this.setState({ expandedRows: e.data })}>
+                                    <Column expander style={{ width: '3em' }} />
+                                    <Column field="name" header="Name" sortable />
+                                </DataTable>
+                            </div>
 
-                                <Column expander style={{ width: '3em' }} />
-                                <Column field="name" header="Name" sortable />
-
-                            </DataTable>
+                            <div className="p-mt-lg-5">
+                                <DataTable value={this.state.songs} paginator rows={10} header="List of all songs"
+                                           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                                           emptyMessage="No songs found." className="datatable-responsive">
+                                    <Column field="name" header="Name" sortable />
+                                    <Column field="featuredArtistNames" header="Featured Artists" />
+                                </DataTable>
+                            </div>
                         </Dialog>
 
                     </div>

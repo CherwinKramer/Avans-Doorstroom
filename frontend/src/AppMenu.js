@@ -48,7 +48,6 @@ const AppSubmenu = (props) => {
 
     const renderLink = (item, i) => {
         let content = renderLinkContent(item);
-
         if (item.to) {
             return (
                 <NavLink activeClassName="active-route" to={item.to} onClick={(e) => onMenuItemClick(e, item, i)} exact target={item.target}>
@@ -67,8 +66,7 @@ const AppSubmenu = (props) => {
 
     let items = props.items && props.items.map((item, i) => {
         let active = activeIndex === i;
-        let styleClass = classNames(item.badgeStyleClass, { 'active-menuitem': active && !item.to });
-
+        let styleClass = classNames({ 'active-menuitem': active && !item.to });
         return (
             <li className={styleClass} key={i}>
                 {item.items && props.root === true && <div className='arrow'></div>}

@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import PropTypes from 'prop-types';
 
 export class AppTopbar extends Component {
 
@@ -12,14 +11,6 @@ export class AppTopbar extends Component {
         this.props.logout();
         event.preventDefault();
     }
-
-    static defaultProps = {
-        onToggleMenu: null
-    };
-
-    static propTypes = {
-        onToggleMenu: PropTypes.func.isRequired
-    };
 
     render() {
         return (
